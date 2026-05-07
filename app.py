@@ -36,98 +36,91 @@ load_css("assets/styles.css")
 # --- PAGES ---
 
 def landing_page():
-    # Dynamic Hero Section
+    # --- HERO SECTION ---
     st.markdown(f"""
-    <div style="text-align:center; padding: 60px 0;">
+    <div style="text-align:center; padding: 100px 0 60px 0;">
         <div class="float">
-            <img src="data:image/png;base64,{get_base64_image('assets/logo.png')}" style="width:140px; margin-bottom:30px; filter: drop-shadow(0 0 20px #FF0080);">
+            <img src="data:image/png;base64,{get_base64_image('assets/logo.png')}" style="width:160px; margin-bottom:40px; filter: drop-shadow(0 0 30px #FF0080);">
         </div>
-        <h1 class="title-text" style="font-size: 80px;">MindLoop</h1>
-        <p class="subtitle-text" style="font-size: 24px; max-width: 900px; margin: 0 auto 40px auto; color: #fff;">
-            The world's first <span style="color:var(--neon-blue); font-weight:bold;">Sentient Social Network</span>. 
-            Experience live interactions, intelligent matching, and a community that evolves with you.
+        <h1 class="title-text" style="font-size: 100px; margin-bottom: 20px;">MindLoop</h1>
+        <p class="subtitle-text" style="font-size: 28px; max-width: 1000px; margin: 0 auto 50px auto; color: #fff; line-height: 1.4; letter-spacing: 1px;">
+            The Sentient Network Designed by <span style="color:var(--neon-blue); font-weight:bold; border-bottom: 2px solid var(--neon-blue);">Yekzan KUS</span>. <br>
+            Where Artificial Intelligence meets Human Consciousness.
         </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Hero Image / Vibe
-    st.image("assets/hero_vibe.png", use_container_width=True)
-
-    # Main CTA
-    _, col2, _ = st.columns([1,1.5,1])
-    with col2:
-        if st.button("ENTER THE EVOLUTION", key="btn_hero_enter"):
-            st.session_state['page'] = 'auth'
-            st.rerun()
-
-    # Live Now Section (LiveMe Vibes)
-    st.markdown("""
-    <div style="margin-top: 100px; text-align: center;">
-        <h2 class="title-text" style="font-size: 40px;">Live Now <span class="live-badge">● LIVE</span></h2>
-        <p class="subtitle-text">Join thousands of active loops happening this second.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Grid of Live Profiles (Simulation)
-    profiles = [
-        {"name": "Nova_AI", "viewers": "12.4k", "img": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=500&fit=crop"},
-        {"name": "PixelMaster", "viewers": "8.1k", "img": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=500&fit=crop"},
-        {"name": "ZenLoop", "viewers": "5.2k", "img": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=500&fit=crop"},
-        {"name": "CyberSoul", "viewers": "25.9k", "img": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=500&fit=crop"},
-        {"name": "Luna_X", "viewers": "1.2k", "img": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=500&fit=crop"},
-        {"name": "Drift_King", "viewers": "3.4k", "img": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&h=500&fit=crop"},
-    ]
-
-    cols = st.columns(3)
-    for i, profile in enumerate(profiles):
-        with cols[i % 3]:
-            st.markdown(f"""
-            <div class="glass-card" style="padding: 0; overflow: hidden; margin-bottom: 20px;">
-                <div style="position: relative; aspect-ratio: 4/5;">
-                    <img src="{profile['img']}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <div style="position: absolute; top: 10px; left: 10px;">
-                        <span class="live-badge">● {profile['viewers']}</span>
-                    </div>
-                    <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
-                        <h4 style="margin: 0; font-weight: 700; font-size: 18px;">{profile['name']}</h4>
-                        <p style="margin: 0; font-size: 12px; color: #ccc;">Interactive Stream</p>
-                    </div>
+    # --- FOUNDER SECTION (The Architect) ---
+    col_a, col_b = st.columns([1, 1.2])
+    with col_a:
+        st.image("assets/yekzan_visionary.png", caption="Yekzan KUS - The Architect", use_container_width=True)
+    with col_b:
+        st.markdown(f"""
+        <div class="visionary-card">
+            <h2 style="font-family: 'Syncopate', sans-serif; color: #FFD700; font-size: 32px; margin-bottom: 20px;">THE ARCHITECT'S VISION</h2>
+            <p style="font-size: 18px; line-height: 1.8; color: #eee;">
+                "MindLoop n'est pas un simple réseau social. C'est le manifeste d'une nouvelle ère. 
+                J'ai conçu cet écosystème pour briser les barrières entre le réel et le digital. 
+                Ici, chaque connexion est amplifiée par une intelligence sentiente capable de comprendre 
+                l'essence même de vos interactions."
+            </p>
+            <p style="font-weight: 700; color: #FFD700; font-size: 20px; margin-top: 20px;">— Yekzan KUS</p>
+            <div style="margin-top: 30px; display: flex; gap: 20px;">
+                <div class="stat-box" style="flex: 1; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 900; color: #00DFD8;">20/20</div>
+                    <div style="font-size: 12px; text-transform: uppercase; color: #888;">Design Score</div>
+                </div>
+                <div class="stat-box" style="flex: 1; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 900; color: #FF0080;">ELITE</div>
+                    <div style="font-size: 12px; text-transform: uppercase; color: #888;">Status</div>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-
-    # Trust / Stats Section
-    st.markdown("""
-    <div style="margin-top: 80px; padding: 60px; background: rgba(255, 255, 255, 0.02); border-radius: 40px; border: 1px solid var(--glass-border);">
-        <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
-            <div class="stat-box">
-                <div class="stat-value">2.4M</div>
-                <div class="stat-label">Active Loops</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">50k+</div>
-                <div class="stat-label">Verified Creators</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-value">0.1ms</div>
-                <div class="stat-label">Latency</div>
-            </div>
         </div>
-    </div>
-    
-    <div style="text-align:center; margin-top:100px;">
-        <h2 class="title-text" style="font-size: 50px;">Beyond Instagram. <br>Beyond X.</h2>
-        <p class="subtitle-text" style="font-size: 20px;">MindLoop isn't just an app. It's a sentient experience.</p>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
+    # --- MAIN CTA ---
+    _, col2, _ = st.columns([1,1.5,1])
+    with col2:
+        if st.button("ESTABLISH NEURAL CONNECTION", key="btn_hero_enter"):
+            st.session_state['page'] = 'auth'
+            st.rerun()
+
+    # --- LIVE GRID SECTION ---
+    st.markdown("""
+    <div style="margin-top: 120px; text-align: center; margin-bottom: 60px;">
+        <h2 class="title-text" style="font-size: 45px;">Sentient Feed <span class="live-badge">● QUANTUM LIVE</span></h2>
+        <p class="subtitle-text" style="font-size: 18px;">Interact with the elite network in real-time.</p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Final CTA
+    # Enhanced Grid
+    st.image("assets/live_grid_ultra.png", use_container_width=True)
+
+    # --- COMPETITIVE EDGE ---
+    st.markdown("""
+    <div style="margin-top: 100px; padding: 80px; background: linear-gradient(to bottom, rgba(255,255,255,0.01), rgba(0,223,216,0.02)); border-radius: 50px; border: 1px solid var(--glass-border); text-align: center;">
+        <h2 class="title-text" style="font-size: 50px; margin-bottom: 40px;">OBSOLETING THE PAST</h2>
+        <div style="display: flex; justify-content: center; gap: 50px; flex-wrap: wrap;">
+            <div style="opacity: 0.5; text-decoration: line-through; font-size: 24px;">Instagram</div>
+            <div style="opacity: 0.5; text-decoration: line-through; font-size: 24px;">X (Twitter)</div>
+            <div style="opacity: 0.5; text-decoration: line-through; font-size: 24px;">TikTok</div>
+            <div style="font-size: 32px; color: var(--neon-blue); font-weight: 900; font-family: 'Syncopate';">MINDLOOP</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- FINAL CTA ---
+    st.markdown("<br><br><br>", unsafe_allow_html=True)
     _, final_col, _ = st.columns([1,2,1])
     with final_col:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("JOIN THE BETA ACCESS", key="btn_final_beta"):
+        st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+        if st.button("CLAIM YOUR IDENTITY NOW", key="btn_final_beta"):
             st.session_state['page'] = 'auth'
             st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
 def auth_page():
     logo_base64 = get_base64_image('assets/logo.png')
