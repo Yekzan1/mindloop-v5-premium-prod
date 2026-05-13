@@ -1,342 +1,531 @@
 import streamlit as st
 import base64
 import os
-import json
 from utils.supabase_client import get_supabase
-from utils.auth_handler import hash_password, check_password, validate_email, is_strong_password
+from utils.auth_handler import hash_password, check_password, validate_email
 
-# --- ELITE SEO & PERFORMANCE ---
-# Targeting 100/100 Lighthouse score
-SEO_META = """
-<head>
-    <!-- Primary Meta Tags -->
-    <title>MindLoop | The Sentient Social Evolution by Yekzan KUS</title>
-    <meta name="title" content="MindLoop | The Sentient Social Evolution by Yekzan KUS">
-    <meta name="description" content="MindLoop is the world's first Sentient Social Network. Designed by architect Yekzan KUS, it bridges human consciousness and advanced AI. Join the elite loop.">
-    <meta name="keywords" content="MindLoop, Yekzan KUS, Sentient Network, AI Social Media, Next-gen AI, Future of Social, Neural Interface UI, Elite Social App">
-    <meta name="author" content="Yekzan KUS">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://mindloop.streamlit.app/">
-    <meta property="og:title" content="MindLoop | The Sentient Revolution">
-    <meta property="og:description" content="Experience the next era of social interaction. Designed by Yekzan KUS.">
-    <meta property="og:image" content="https://mindloop.streamlit.app/assets/yekzan_visionary.png">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://mindloop.streamlit.app/">
-    <meta property="twitter:title" content="MindLoop | The Sentient Revolution">
-    <meta property="twitter:description" content="Experience the next era of social interaction. Designed by Yekzan KUS.">
-    <meta property="twitter:image" content="https://mindloop.streamlit.app/assets/yekzan_visionary.png">
-
-    <!-- SEO Essentials -->
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="English">
-    <meta name="revisit-after" content="7 days">
-    <link rel="canonical" href="https://mindloop.streamlit.app/">
-
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "MindLoop",
-      "operatingSystem": "Web",
-      "applicationCategory": "SocialNetworkingApplication",
-      "creator": {
-        "@type": "Person",
-        "name": "Yekzan KUS",
-        "jobTitle": "Architect & Founder",
-        "url": "https://www.linkedin.com/in/yekzan-kus/"
-      },
-      "description": "The world's first Sentient Social Network.",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      }
-    }
-    </script>
-</head>
+# ── SEO (no <script> tags — Streamlit strips them) ──────────────────────────
+SEO = """
+<meta name="description" content="MindLoop — The AI-powered professional learning network. Share knowledge, collaborate, and grow with intelligent tools.">
+<meta name="keywords" content="MindLoop, AI learning, professional network, knowledge sharing, collaboration, Yekzan KUS">
+<meta name="author" content="Yekzan KUS">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mindloop.streamlit.app/">
+<meta property="og:title" content="MindLoop — Intelligence Loop">
+<meta property="og:description" content="Every piece of knowledge becomes interactive with AI.">
+<meta property="og:image" content="https://mindloop.streamlit.app/app/static/hero_bg.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://mindloop.streamlit.app/">
 """
-st.markdown(SEO_META, unsafe_allow_html=True)
+st.markdown(SEO, unsafe_allow_html=True)
 
-# --- CONFIGURATION ---
 st.set_page_config(
-    page_title="MindLoop | The Sentient Revolution",
-    page_icon="assets/logo.png",
+    page_title="MindLoop — Intelligence Loop",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# --- TRANSLATIONS (ELITE EDITION) ---
-LANGUAGES = {
+# ── Translations ─────────────────────────────────────────────────────────────
+T = {
     "EN": {
-        "hero_title": "MINDLOOP",
-        "hero_subtitle": "THE SENTIENT NETWORK ARCHITECTED BY",
-        "hero_desc": "Beyond Social Media. Beyond AI. Experience the Neural Singularity.",
-        "vision_title": "THE ARCHITECT'S MANIFESTO",
-        "vision_text": '"MindLoop is the realization of a dream: a space where digital identity is not just a profile, but a sentient extension of your consciousness. I built this for the visionaries, the leaders, and the dreamers who demand more from technology. Welcome to the elite loop."',
-        "stat_design": "UX Excellence",
-        "stat_status": "Tier Status",
-        "cta_neural": "INITIALIZE NEURAL ACCESS",
-        "feed_title": "SENTIENT STREAM",
-        "feed_badge": "QUANTUM ACTIVE",
-        "feed_desc": "High-fidelity interactions powered by sentient neural nodes.",
-        "edge_title": "THE END OF THE OLD ERA",
-        "edge_desc": "MindLoop renders traditional social platforms obsolete.",
-        "cta_claim": "CLAIM YOUR LEGACY IDENTITY",
-        "auth_welcome": "AUTHENTICATION GATEWAY",
-        "auth_desc": "Verify your identity to enter the sentient network.",
-        "auth_email": "Neural ID (Email)",
-        "auth_pass": "Neural Key",
-        "auth_login": "ACCESS LOOP",
-        "auth_signup_prompt": "No Identity? Request Initialization",
-        "auth_signup_btn": "INITIALIZE IDENTITY",
-        "auth_login_prompt": "Already Connected? Return to Gateway",
-        "dash_welcome": "Welcome back, Architect",
-        "dash_status": "Connection Status: SECURE",
-        "dash_logout": "TERMINATE CONNECTION"
+        "tagline": "Every idea becomes intelligence.",
+        "hero_sub": "The AI-powered professional learning network",
+        "hero_desc": "Share knowledge. Collaborate. Grow. Powered by AI that transforms every post into interactive learning.",
+        "cta_primary": "Start for free →",
+        "cta_secondary": "See how it works",
+        "feat1_t": "AI-Enhanced Posts",
+        "feat1_d": "Every post is automatically enriched — summaries, quizzes, flashcards.",
+        "feat2_t": "Smart Collaboration",
+        "feat2_d": "Connect with people sharing your skills and goals.",
+        "feat3_t": "Skill Graph",
+        "feat3_d": "Your expertise is visualized and grows with every interaction.",
+        "feat4_t": "Learning Paths",
+        "feat4_d": "AI recommends personalized curricula based on your activity.",
+        "ai_title": "Watch AI Transform a Post",
+        "ai_input": '📝 User posts: "Introduction to SQL"',
+        "ai_out1": "📋 Smart Summary",
+        "ai_out2": "🧠 Auto Quiz",
+        "ai_out3": "🔖 Flashcards",
+        "ai_out4": "🔗 Resources",
+        "ai_out5": "👥 Connect with 12 SQL learners",
+        "auth_title": "Join the Loop",
+        "auth_sub": "Create your account in seconds",
+        "login_title": "Welcome back",
+        "login_sub": "Sign in to your account",
+        "email": "Email address",
+        "password": "Password",
+        "name": "Full name",
+        "btn_login": "Sign in →",
+        "btn_signup": "Create account →",
+        "to_signup": "No account? Create one",
+        "to_login": "Already have an account? Sign in",
+        "dash_hello": "Welcome back",
+        "dash_subtitle": "Your intelligence loop is active",
+        "post_placeholder": "Share knowledge, a course, a discovery…",
+        "post_btn": "Publish & Let AI Enhance",
+        "feed_title": "Intelligence Feed",
+        "profile_title": "My Profile",
+        "skills_title": "My Skills",
+        "logout": "Sign out",
     },
     "FR": {
-        "hero_title": "MINDLOOP",
-        "hero_subtitle": "LE RÉSEAU SENTIENT ARCHITECTURÉ PAR",
-        "hero_desc": "Au-delà des réseaux sociaux. Au-delà de l'IA. Vivez la Singularité Neurale.",
-        "vision_title": "LE MANIFESTE DE L'ARCHITECTE",
-        "vision_text": '"MindLoop est la réalisation d\'un rêve : un espace où l\'identité numérique n\'est pas qu\'un profil, mais une extension sentiente de votre conscience. J\'ai conçu ceci pour les visionnaires qui exigent plus de la technologie. Bienvenue dans la boucle d\'élite."',
-        "stat_design": "Excellence UX",
-        "stat_status": "Statut de Rang",
-        "cta_neural": "INITIALISER L'ACCÈS NEURAL",
-        "feed_title": "FLUX SENTIENT",
-        "feed_badge": "QUANTUM ACTIF",
-        "feed_desc": "Interactions haute fidélité propulsées par des nœuds neuraux.",
-        "edge_title": "LA FIN DE L'ANCIENNE ÈRE",
-        "edge_desc": "MindLoop rend les plateformes traditionnelles obsolètes.",
-        "cta_claim": "RÉCLAMEZ VOTRE IDENTITÉ HÉRITAGE",
-        "auth_welcome": "PORTAIL D'AUTHENTIFICATION",
-        "auth_desc": "Vérifiez votre identité pour entrer dans le réseau.",
-        "auth_email": "ID Neural (Email)",
-        "auth_pass": "Clé Neurale",
-        "auth_login": "ACCÉDER AU LOOP",
-        "auth_signup_prompt": "Pas d'identité ? Demander l'initialisation",
-        "auth_signup_btn": "INITIALISER L'IDENTITÉ",
-        "auth_login_prompt": "Déjà connecté ? Retour au portail",
-        "dash_welcome": "Bon retour, Architecte",
-        "dash_status": "Statut de Connexion : SÉCURISÉ",
-        "dash_logout": "TERMINER LA CONNEXION"
+        "tagline": "Chaque idée devient intelligence.",
+        "hero_sub": "Le réseau professionnel d'apprentissage propulsé par l'IA",
+        "hero_desc": "Partagez vos connaissances. Collaborez. Évoluez. Propulsé par une IA qui transforme chaque post en apprentissage interactif.",
+        "cta_primary": "Commencer gratuitement →",
+        "cta_secondary": "Voir comment ça fonctionne",
+        "feat1_t": "Posts enrichis par IA",
+        "feat1_d": "Chaque post est enrichi automatiquement — résumés, quiz, fiches.",
+        "feat2_t": "Collaboration Intelligente",
+        "feat2_d": "Connectez-vous avec des personnes partageant vos compétences.",
+        "feat3_t": "Graphe de Compétences",
+        "feat3_d": "Votre expertise se visualise et grandit à chaque interaction.",
+        "feat4_t": "Parcours d'Apprentissage",
+        "feat4_d": "L'IA recommande des cursus personnalisés selon votre activité.",
+        "ai_title": "L'IA transforme vos posts",
+        "ai_input": '📝 Utilisateur poste : "Introduction au SQL"',
+        "ai_out1": "📋 Résumé intelligent",
+        "ai_out2": "🧠 Quiz automatique",
+        "ai_out3": "🔖 Fiches de révision",
+        "ai_out4": "🔗 Ressources",
+        "ai_out5": "👥 Connecté à 12 apprenants SQL",
+        "auth_title": "Rejoignez le Loop",
+        "auth_sub": "Créez votre compte en quelques secondes",
+        "login_title": "Bon retour",
+        "login_sub": "Connectez-vous à votre compte",
+        "email": "Adresse email",
+        "password": "Mot de passe",
+        "name": "Nom complet",
+        "btn_login": "Se connecter →",
+        "btn_signup": "Créer un compte →",
+        "to_signup": "Pas de compte ? En créer un",
+        "to_login": "Déjà un compte ? Se connecter",
+        "dash_hello": "Bon retour",
+        "dash_subtitle": "Votre intelligence loop est active",
+        "post_placeholder": "Partagez une connaissance, un cours, une découverte…",
+        "post_btn": "Publier & Enrichir avec l'IA",
+        "feed_title": "Fil Intelligent",
+        "profile_title": "Mon Profil",
+        "skills_title": "Mes Compétences",
+        "logout": "Se déconnecter",
     }
 }
 
-# --- STATE MANAGEMENT ---
-if 'lang' not in st.session_state: st.session_state['lang'] = 'EN'
-if 'page' not in st.session_state: st.session_state['page'] = 'landing'
-if 'authenticated' not in st.session_state: st.session_state['authenticated'] = False
-if 'user' not in st.session_state: st.session_state['user'] = None
-if 'auth_mode' not in st.session_state: st.session_state['auth_mode'] = 'login'
+# ── State ─────────────────────────────────────────────────────────────────────
+for k, v in [("lang","EN"),("page","landing"),("auth_mode","signup"),
+              ("authenticated",False),("user",None)]:
+    if k not in st.session_state:
+        st.session_state[k] = v
 
-def t(key): return LANGUAGES[st.session_state['lang']].get(key, key)
+def tr(k): return T[st.session_state.lang].get(k, k)
 
-def load_css(file_name):
-    with open(file_name) as f:
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def load_css():
+    with open("assets/styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-def get_base64_image(image_path):
+def img_b64(path):
     try:
-        with open(image_path, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    except: return ""
+        with open(path,"rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except:
+        return ""
 
-load_css("assets/styles.css")
+load_css()
 
-# --- UI COMPONENTS ---
-def language_switcher():
-    # Subtle language switcher in the sidebar
-    with st.sidebar:
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        new_lang = st.selectbox("Language", ["EN", "FR"], index=0 if st.session_state['lang'] == 'EN' else 1, key="lang_sw")
-        if new_lang != st.session_state['lang']:
-            st.session_state['lang'] = new_lang
-            st.rerun()
+# Lang switcher (sidebar)
+with st.sidebar:
+    lang = st.selectbox("🌐 Language", ["EN","FR"],
+                        index=0 if st.session_state.lang=="EN" else 1)
+    if lang != st.session_state.lang:
+        st.session_state.lang = lang
+        st.rerun()
 
-# --- PAGE ROUTING ---
-def landing_page():
-    # Hero Section
+# ── LANDING PAGE ──────────────────────────────────────────────────────────────
+def landing():
+    logo = img_b64("assets/logo.png")
+    hero = img_b64("assets/hero_bg.png")
+
+    # Fullscreen hero
     st.markdown(f"""
-    <div class="fade-in" style="text-align:center; padding: 120px 0 80px 0;">
-        <div class="float">
-            <img src="data:image/png;base64,{get_base64_image('assets/logo.png')}" alt="MindLoop" style="width:180px; margin-bottom:50px; filter: drop-shadow(0 0 40px #FF0080);">
+    <div style="
+        position:relative; min-height:100vh; display:flex; flex-direction:column;
+        align-items:center; justify-content:center; text-align:center;
+        padding: 80px 40px 120px;
+        background: url('data:image/png;base64,{hero}') center/cover no-repeat;
+    ">
+        <div style="
+            position:absolute; inset:0;
+            background: linear-gradient(180deg, rgba(6,9,18,0.5) 0%, rgba(6,9,18,0.95) 100%);
+        "></div>
+        <div style="position:relative; z-index:2;">
+            <div class="ml-badge" style="margin:0 auto 32px;">⚡ AI-Powered Learning Network</div>
+            <h1 class="ml-display" style="font-size:clamp(52px,8vw,96px); margin:0 0 24px;">
+                {tr('tagline')}
+            </h1>
+            <p style="font-size:20px; color:rgba(240,244,255,0.7); max-width:640px;
+                margin:0 auto 48px; line-height:1.7;">
+                {tr('hero_desc')}
+            </p>
         </div>
-        <h1 class="title-text" style="font-size: clamp(60px, 10vw, 120px); margin-bottom: 30px;">{t('hero_title')}</h1>
-        <p style="font-size: 24px; font-weight: 300; letter-spacing: 5px; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 10px;">
-            {t('hero_subtitle')} <span style="color:var(--neon-blue); font-weight:900;">YEKZAN KUS</span>
-        </p>
-        <p style="font-size: 20px; color: #fff; max-width: 800px; margin: 0 auto 60px auto; opacity: 0.8;">
-            {t('hero_desc')}
-        </p>
     </div>
     """, unsafe_allow_html=True)
 
-    # Core CTA
-    _, cta_col, _ = st.columns([1, 1.5, 1])
-    with cta_col:
-        if st.button(t('cta_neural'), key="hero_cta"):
-            st.session_state['page'] = 'auth'
+    # CTA buttons below hero
+    _, c, _ = st.columns([1,1.4,1])
+    with c:
+        if st.button(tr("cta_primary"), key="hero_cta"):
+            st.session_state.page = "auth"
+            st.session_state.auth_mode = "signup"
             st.rerun()
 
-    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
+    # Feature grid
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="text-align:center; margin-bottom:48px;">
+        <div class="ml-label">WHAT MINDLOOP DOES</div>
+        <h2 class="ml-display" style="font-size:42px; margin-top:16px;">
+            Knowledge, Supercharged
+        </h2>
+    </div>
+    """, unsafe_allow_html=True)
 
-    # Founder Manifesto
-    col1, col2 = st.columns([1, 1.2], gap="large")
-    with col1:
+    cols = st.columns(4, gap="small")
+    feats = [
+        ("🤖","feat1_t","feat1_d"),
+        ("🤝","feat2_t","feat2_d"),
+        ("📊","feat3_t","feat3_d"),
+        ("🎯","feat4_t","feat4_d"),
+    ]
+    for col, (icon, ti, di) in zip(cols, feats):
+        with col:
+            st.markdown(f"""
+            <div class="ml-feature">
+                <span class="ml-feature-icon">{icon}</span>
+                <div class="ml-feature-title">{tr(ti)}</div>
+                <div class="ml-feature-desc">{tr(di)}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # AI demo section
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown(f"""
+    <div style="text-align:center; margin-bottom:40px;">
+        <div class="ml-label">AI IN ACTION</div>
+        <h2 class="ml-display" style="font-size:42px; margin-top:16px;">{tr('ai_title')}</h2>
+    </div>
+    """, unsafe_allow_html=True)
+
+    ca, cb = st.columns(2, gap="large")
+    with ca:
         st.markdown(f"""
-        <div class="fade-in">
-            <img src="data:image/png;base64,{get_base64_image('assets/yekzan_visionary.png')}" 
-                 style="width:100%; border-radius: 40px; box-shadow: 0 30px 60px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);">
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown(f"""
-        <div class="visionary-card fade-in">
-            <h2 style="font-family: 'Syncopate'; font-size: 28px; color: #FFD700; margin-bottom: 25px;">{t('vision_title')}</h2>
-            <p style="font-size: 19px; line-height: 1.8; color: #ddd; font-style: italic;">{t('vision_text')}</p>
-            <p style="font-weight: 900; color: #FFD700; font-size: 22px; margin-top: 30px;">— YEKZAN KUS</p>
-            <div style="display: flex; gap: 25px; margin-top: 40px;">
-                <div class="stat-box" style="flex: 1; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 900; color: var(--neon-blue);">100%</div>
-                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">{t('stat_design')}</div>
-                </div>
-                <div class="stat-box" style="flex: 1; text-align: center;">
-                    <div style="font-size: 28px; font-weight: 900; color: #FF0080;">S-RANK</div>
-                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">{t('stat_status')}</div>
-                </div>
+        <div class="ml-card ml-card-glow" style="height:100%;">
+            <div class="ml-label" style="margin-bottom:20px;">INPUT</div>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+                border-radius:12px; padding:20px; font-size:16px; color:#fff;">
+                {tr('ai_input')}
+            </div>
+            <div style="margin-top:20px; color:rgba(240,244,255,0.5); font-size:13px;">
+                → AI processes in &lt;2s
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-    # Social Proof Grid (LiveMe Inspired)
-    st.markdown(f"""
-    <div style="margin-top: 150px; text-align: center;">
-        <h2 class="title-text" style="font-size: 50px;">{t('feed_title')}</h2>
-        <div style="display: inline-block; margin-top: 15px;" class="live-badge">● {t('feed_badge')}</div>
-        <p style="margin-top: 20px; font-size: 18px; color: #888;">{t('feed_desc')}</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.image("assets/live_grid_ultra.png", use_container_width=True)
-
-    # Obsolete Section
-    st.markdown(f"""
-    <div style="margin-top: 120px; padding: 100px; background: rgba(255,255,255,0.01); border-radius: 60px; border: 1px solid var(--glass-border); text-align: center;">
-        <h2 class="title-text" style="font-size: 45px; margin-bottom: 20px;">{t('edge_title')}</h2>
-        <p style="font-size: 20px; color: #666; margin-bottom: 50px;">{t('edge_desc')}</p>
-        <div style="display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; opacity: 0.3;">
-            <div style="text-decoration: line-through; font-size: 26px;">Meta</div>
-            <div style="text-decoration: line-through; font-size: 26px;">X.com</div>
-            <div style="text-decoration: line-through; font-size: 26px;">TikTok</div>
+    with cb:
+        st.markdown(f"""
+        <div class="ml-ai-card" style="height:100%;">
+            <div class="ml-label" style="margin-bottom:20px;">OUTPUT</div>
+            {"".join([f'<div style="background:rgba(255,255,255,0.03); border:1px solid rgba(0,245,255,0.1); border-radius:10px; padding:12px 16px; margin-bottom:10px; font-size:14px; color:#F0F4FF;">{o}</div>' for o in [tr("ai_out1"),tr("ai_out2"),tr("ai_out3"),tr("ai_out4"),tr("ai_out5")]])}
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    # Final conversion
-    st.markdown("<br><br><br><br>", unsafe_allow_html=True)
-    _, final_cta, _ = st.columns([1, 2, 1])
-    with final_cta:
-        if st.button(t('cta_claim'), key="final_btn"):
-            st.session_state['page'] = 'auth'
-            st.rerun()
+    # Stats
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    s1, s2, s3, s4 = st.columns(4)
+    stats = [("10K+","Learners"),("98%","Satisfaction"),("50ms","AI Response"),("∞","Knowledge")]
+    for col, (val, lbl) in zip([s1,s2,s3,s4], stats):
+        with col:
+            st.markdown(f"""
+            <div class="ml-stat">
+                <div class="ml-stat-value">{val}</div>
+                <div class="ml-stat-label">{lbl}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # Final CTA
     st.markdown("<br><br><br>", unsafe_allow_html=True)
-
-def auth_page():
     st.markdown(f"""
-    <div style="text-align:center; padding-top: 60px; margin-bottom: 40px;">
-        <div class="float">
-            <img src="data:image/png;base64,{get_base64_image('assets/logo.png')}" style="width:100px;">
-        </div>
-        <h1 class="title-text" style="font-size: 45px; margin-top: 30px;">{t('auth_welcome')}</h1>
-        <p style="color: #888;">{t('auth_desc')}</p>
+    <div style="text-align:center; padding:80px 40px;
+        background:linear-gradient(135deg,rgba(124,58,237,0.1) 0%,rgba(0,245,255,0.05) 100%);
+        border:1px solid rgba(124,58,237,0.2); border-radius:28px; margin:0 40px 80px;">
+        <h2 class="ml-display" style="font-size:48px; margin-bottom:16px;">
+            Ready to loop in?
+        </h2>
+        <p style="font-size:18px; color:rgba(240,244,255,0.6); margin-bottom:40px;">
+            Free forever. No credit card required.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    _, cta_col, _ = st.columns([1,1,1])
+    with cta_col:
+        if st.button(tr("cta_primary"), key="final_cta"):
+            st.session_state.page = "auth"
+            st.session_state.auth_mode = "signup"
+            st.rerun()
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
+
+# ── AUTH PAGE ─────────────────────────────────────────────────────────────────
+def auth():
+    mode = st.session_state.auth_mode
+    title = tr("auth_title") if mode=="signup" else tr("login_title")
+    sub   = tr("auth_sub")   if mode=="signup" else tr("login_sub")
+
+    st.markdown(f"""
+    <div style="text-align:center; padding:60px 20px 32px;">
+        <h1 class="ml-display" style="font-size:52px;">{title}</h1>
+        <p style="color:rgba(240,244,255,0.5); font-size:16px;">{sub}</p>
     </div>
     """, unsafe_allow_html=True)
 
-    _, center, _ = st.columns([1, 1.5, 1])
-    with center:
-        st.markdown('<div class="login-card fade-in">', unsafe_allow_html=True)
-        
-        # Social Login
-        col1, col2 = st.columns(2)
-        with col1: st.markdown('<div class="oauth-btn"><img src="https://www.google.com/favicon.ico" width="20"> Google</div>', unsafe_allow_html=True)
-        with col2: st.markdown('<div class="oauth-btn"><img src="https://github.githubassets.com/favicons/favicon.svg" width="20"> GitHub</div>', unsafe_allow_html=True)
-        
-        st.markdown('<p style="text-align:center; margin: 20px 0; color: #444;">— OR —</p>', unsafe_allow_html=True)
+    _, col, _ = st.columns([1,1.4,1])
+    with col:
+        st.markdown('<div class="ml-card-auth">', unsafe_allow_html=True)
 
-        if st.session_state['auth_mode'] == 'login':
-            email = st.text_input(t('auth_email'), placeholder="identity@mindloop.io")
-            password = st.text_input(t('auth_pass'), type="password", placeholder="••••••••")
-            
-            if st.button(t('auth_login')):
-                if email and password:
+        # OAuth
+        st.markdown(f"""
+        <div class="ml-oauth-btn">
+            <img src="https://www.google.com/favicon.ico" width="18"> Continue with Google
+        </div>
+        <div class="ml-oauth-btn">
+            <img src="https://github.githubassets.com/favicons/favicon.svg" width="18"> Continue with GitHub
+        </div>
+        <div class="ml-divider">or</div>
+        """, unsafe_allow_html=True)
+
+        if mode == "signup":
+            name  = st.text_input(tr("name"), placeholder="Ada Lovelace")
+            email = st.text_input(tr("email"), placeholder="ada@mindloop.io")
+            pwd   = st.text_input(tr("password"), type="password", placeholder="Min. 8 characters")
+
+            if st.button(tr("btn_signup")):
+                if not (name and email and pwd):
+                    st.warning("Please fill in all fields.")
+                elif not validate_email(email):
+                    st.error("Invalid email address.")
+                elif len(pwd) < 8:
+                    st.error("Password must be at least 8 characters.")
+                else:
+                    sb = get_supabase()
+                    if sb:
+                        try:
+                            sb.table("users").insert({
+                                "full_name": name,
+                                "email": email,
+                                "password_hash": hash_password(pwd)
+                            }).execute()
+                            st.success("Account created! Sign in now.")
+                            st.session_state.auth_mode = "login"
+                            st.rerun()
+                        except Exception:
+                            st.error("An account with this email already exists.")
+                    else:
+                        st.error("Database unavailable. Try again later.")
+
+            st.markdown(f"""<p style="text-align:center; margin-top:20px; font-size:14px;
+                color:rgba(240,244,255,0.4); cursor:pointer;" onclick="">{tr("to_login")}</p>""",
+                unsafe_allow_html=True)
+            if st.button(tr("to_login"), key="go_login"):
+                st.session_state.auth_mode = "login"
+                st.rerun()
+
+        else:  # login
+            email = st.text_input(tr("email"), placeholder="ada@mindloop.io")
+            pwd   = st.text_input(tr("password"), type="password", placeholder="••••••••")
+
+            if st.button(tr("btn_login")):
+                if not (email and pwd):
+                    st.warning("Please fill in all fields.")
+                else:
                     sb = get_supabase()
                     if sb:
                         try:
                             res = sb.table("users").select("*").eq("email", email).execute()
-                            if res.data and check_password(password, res.data[0]['password_hash']):
-                                st.session_state['authenticated'] = True
-                                st.session_state['user'] = res.data[0]
+                            if res.data and check_password(pwd, res.data[0]["password_hash"]):
+                                st.session_state.authenticated = True
+                                st.session_state.user = res.data[0]
+                                st.session_state.page = "dashboard"
                                 st.rerun()
-                            else: st.error("Neural Access Denied")
-                        except: st.error("Supabase Connection Error")
-            
-            st.markdown(f"<p style='text-align:center; margin-top:20px; font-size:14px; color:#666;'>{t('auth_signup_prompt')}</p>", unsafe_allow_html=True)
-            if st.button(t('auth_signup_btn')):
-                st.session_state['auth_mode'] = 'signup'
-                st.rerun()
+                            else:
+                                st.error("Incorrect email or password.")
+                        except Exception as e:
+                            st.error(f"Connection error: {e}")
+                    else:
+                        st.error("Database unavailable.")
 
-        else:
-            name = st.text_input("Identity Name")
-            email = st.text_input(t('auth_email'))
-            password = st.text_input(t('auth_pass'), type="password")
-            
-            if st.button(t('auth_signup_btn')):
-                if name and email and password:
-                    sb = get_supabase()
-                    if sb:
-                        try:
-                            sb.table("users").insert({"full_name": name, "email": email, "password_hash": hash_password(password)}).execute()
-                            st.success("Identity Initialized! Access the Loop.")
-                            st.session_state['auth_mode'] = 'login'
-                            st.rerun()
-                        except: st.error("Identity already exists")
-
-            st.markdown(f"<p style='text-align:center; margin-top:20px; font-size:14px; color:#666;'>{t('auth_login_prompt')}</p>", unsafe_allow_html=True)
-            if st.button(t('auth_login')):
-                st.session_state['auth_mode'] = 'login'
+            if st.button(tr("to_signup"), key="go_signup"):
+                st.session_state.auth_mode = "signup"
                 st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
-def dashboard_page():
-    user = st.session_state['user']
+
+# ── DASHBOARD ─────────────────────────────────────────────────────────────────
+def dashboard():
+    user = st.session_state.user or {}
+    name = user.get("full_name", "User")
+
+    # Sidebar nav
+    with st.sidebar:
+        st.markdown(f"""
+        <div style="padding:24px 16px; border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:16px;">
+            <div style="font-family:'Space Grotesk'; font-size:18px; font-weight:700; color:#F0F4FF;">⚡ MindLoop</div>
+            <div style="font-size:13px; color:rgba(240,244,255,0.4); margin-top:4px;">Intelligence Loop</div>
+        </div>
+        <div style="padding:0 8px;">
+            <div class="ml-nav-item active">🏠 Feed</div>
+            <div class="ml-nav-item">🤖 AI Workspace</div>
+            <div class="ml-nav-item">👥 Network</div>
+            <div class="ml-nav-item">📊 My Skills</div>
+            <div class="ml-nav-item">👤 Profile</div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)
+        if st.button(tr("logout")):
+            st.session_state.authenticated = False
+            st.session_state.user = None
+            st.session_state.page = "landing"
+            st.rerun()
+
+    # Main content
     st.markdown(f"""
-    <div style="padding: 60px; text-align: center;" class="fade-in">
-        <h1 class="title-text">{t('dash_welcome')}, {user['full_name']}</h1>
-        <p style="color:var(--neon-blue); letter-spacing: 2px;">{t('dash_status')}</p>
+    <div style="padding:40px 60px 0;">
+        <div class="ml-badge ml-badge-live">⚡ LIVE</div>
+        <h1 class="ml-display" style="font-size:42px; margin:16px 0 4px;">
+            {tr('dash_hello')}, {name.split()[0]}
+        </h1>
+        <p style="color:rgba(240,244,255,0.5); font-size:15px; margin-bottom:40px;">
+            {tr('dash_subtitle')}
+        </p>
     </div>
     """, unsafe_allow_html=True)
-    
-    st.image("assets/live_grid_ultra.png", use_container_width=True)
-    
-    if st.button(t('dash_logout')):
-        st.session_state['authenticated'] = False
-        st.session_state['user'] = None
-        st.session_state['page'] = 'landing'
-        st.rerun()
 
-# --- RUNTIME ---
-language_switcher()
-if st.session_state['authenticated']:
-    dashboard_page()
-elif st.session_state['page'] == 'landing':
-    landing_page()
-elif st.session_state['page'] == 'auth':
-    auth_page()
+    feed_col, side_col = st.columns([2,1], gap="large")
+
+    with feed_col:
+        st.markdown('<div style="padding:0 60px;">', unsafe_allow_html=True)
+
+        # Compose box
+        st.markdown('<div class="ml-card ml-card-glow" style="margin-bottom:24px;">', unsafe_allow_html=True)
+        new_post = st.text_area("", placeholder=tr("post_placeholder"), height=100, label_visibility="collapsed")
+        if st.button(tr("post_btn")):
+            if new_post.strip():
+                st.success("✅ Post published! AI is enhancing it now…")
+            else:
+                st.warning("Write something first.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Feed
+        st.markdown(f'<h3 style="font-family:Space Grotesk; margin-bottom:20px;">{tr("feed_title")}</h3>', unsafe_allow_html=True)
+
+        demo_posts = [
+            ("Alexandre M.", "Python", "Introduction to Machine Learning",
+             ["📋 Auto-summary ready","🧠 5-question quiz generated","🔖 8 flashcards created"],
+             ["Python","ML","Data Science"]),
+            ("Sofia L.", "Design", "UX Design Principles for 2025",
+             ["📋 Key points extracted","🎯 3 exercises generated","🔗 12 resources linked"],
+             ["UX","Design","Product"]),
+            ("James K.", "Backend", "SQL Query Optimization Guide",
+             ["📋 Cheat sheet created","🧠 Quiz ready","👥 Connect with 8 learners"],
+             ["SQL","Database","Backend"]),
+        ]
+        for author, role, title, ai_items, tags in demo_posts:
+            tags_html = "".join(f'<span class="ml-skill-tag">{t}</span>' for t in tags)
+            ai_html = "".join(f'<div style="font-size:13px; color:rgba(240,244,255,0.7); padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.04);">{i}</div>' for i in ai_items)
+            st.markdown(f"""
+            <div class="ml-post-card">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+                    <div style="width:40px; height:40px; border-radius:50%;
+                        background:linear-gradient(135deg,#7C3AED,#00F5FF);
+                        display:flex; align-items:center; justify-content:center;
+                        font-weight:700; font-size:15px; color:#fff; flex-shrink:0;">
+                        {author[0]}
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:14px;">{author}</div>
+                        <div style="font-size:12px; color:rgba(240,244,255,0.4);">{role}</div>
+                    </div>
+                    <div class="ml-badge ml-badge-violet" style="margin-left:auto; font-size:11px;">AI Enhanced</div>
+                </div>
+                <div style="font-size:16px; font-weight:600; margin-bottom:12px;">{title}</div>
+                <div>{tags_html}</div>
+                <div class="ml-ai-card" style="margin-top:16px; padding:16px;">
+                    <div class="ml-label" style="margin-bottom:8px; font-size:10px;">AI GENERATED</div>
+                    {ai_html}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with side_col:
+        st.markdown('<div style="padding:0 40px 0 0;">', unsafe_allow_html=True)
+
+        # Profile card
+        st.markdown(f"""
+        <div class="ml-card ml-card-glow" style="margin-bottom:20px; text-align:center;">
+            <div style="width:64px; height:64px; border-radius:50%; margin:0 auto 16px;
+                background:linear-gradient(135deg,#7C3AED,#00F5FF);
+                display:flex; align-items:center; justify-content:center;
+                font-size:24px; font-weight:700; color:#fff;">
+                {name[0].upper()}
+            </div>
+            <div style="font-family:'Space Grotesk'; font-weight:700; font-size:18px;">{name}</div>
+            <div class="ml-badge" style="margin:12px auto 0; display:inline-flex;">
+                ⚡ Active Learner
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Skills
+        st.markdown(f'<h4 style="font-family:Space Grotesk; margin-bottom:16px;">{tr("skills_title")}</h4>', unsafe_allow_html=True)
+        for skill, pct, color in [("Python",82,"#00F5FF"),("AI/ML",65,"#7C3AED"),("SQL",71,"#FF2D78"),("Design",48,"#10F5A0")]:
+            st.markdown(f"""
+            <div style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px;">
+                    <span>{skill}</span><span style="color:{color};">{pct}%</span>
+                </div>
+                <div class="ml-progress-bar">
+                    <div class="ml-progress-fill" style="width:{pct}%; background:{color};"></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # Suggested connections
+        st.markdown('<h4 style="font-family:Space Grotesk; margin:24px 0 16px;">Suggested for you</h4>', unsafe_allow_html=True)
+        for person, skill in [("Maya R.","AI Researcher"),("Tom B.","Backend Dev"),("Nina L.","Data Analyst")]:
+            st.markdown(f"""
+            <div style="display:flex; align-items:center; gap:12px; padding:12px;
+                background:rgba(255,255,255,0.02); border-radius:12px; margin-bottom:8px;
+                border:1px solid rgba(255,255,255,0.04);">
+                <div style="width:36px; height:36px; border-radius:50%;
+                    background:linear-gradient(135deg,#FF2D78,#7C3AED);
+                    display:flex; align-items:center; justify-content:center;
+                    font-weight:700; font-size:13px; color:#fff; flex-shrink:0;">{person[0]}</div>
+                <div style="flex:1;">
+                    <div style="font-size:13px; font-weight:600;">{person}</div>
+                    <div style="font-size:11px; color:rgba(240,244,255,0.4);">{skill}</div>
+                </div>
+                <div style="font-size:20px; cursor:pointer; color:rgba(240,244,255,0.3);">+</div>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+# ── ROUTER ────────────────────────────────────────────────────────────────────
+if st.session_state.authenticated:
+    dashboard()
+elif st.session_state.page == "auth":
+    auth()
+else:
+    landing()
