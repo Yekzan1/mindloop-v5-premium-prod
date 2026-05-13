@@ -133,6 +133,9 @@ def img_b64(path):
     except:
         return ""
 
+LOGO_Y   = img_b64("assets/logo_y.png")    # Original Y logo
+LOGO_NEW = img_b64("assets/logo.png")       # New neural logo
+
 load_css()
 
 # Lang switcher (sidebar)
@@ -145,10 +148,12 @@ with st.sidebar:
 
 # ── LANDING PAGE ──────────────────────────────────────────────────────────────
 def landing():
-    logo = img_b64("assets/logo.png")
+    logo = img_b64("assets/logo_y.png")   # Y logo
     hero = img_b64("assets/hero_bg.png")
 
     # Fullscreen hero
+    yekzan_img = img_b64("assets/yekzan_visionary.png")
+
     st.markdown(f"""
     <div style="
         position:relative; min-height:100vh; display:flex; flex-direction:column;
@@ -161,12 +166,21 @@ def landing():
             background: linear-gradient(180deg, rgba(6,9,18,0.5) 0%, rgba(6,9,18,0.95) 100%);
         "></div>
         <div style="position:relative; z-index:2;">
-            <div class="ml-badge" style="margin:0 auto 32px;">⚡ AI-Powered Learning Network</div>
+            <!-- Y LOGO -->
+            <div class="ml-float" style="margin-bottom:32px;">
+                <img src="data:image/png;base64,{logo}" alt="MindLoop"
+                     style="width:120px; height:120px; object-fit:contain;
+                            filter: drop-shadow(0 0 30px rgba(0,245,255,0.5));">
+            </div>
+            <div class="ml-badge" style="margin:0 auto 24px;">⚡ AI-Powered Learning Network</div>
             <h1 class="ml-display" style="font-size:clamp(52px,8vw,96px); margin:0 0 24px;">
                 {tr('tagline')}
             </h1>
+            <p style="font-size:18px; color:rgba(240,244,255,0.6); margin-bottom:8px; letter-spacing:2px;">
+                Designed by <span style="color:#00F5FF; font-weight:700;">Yekzan KUS</span>
+            </p>
             <p style="font-size:20px; color:rgba(240,244,255,0.7); max-width:640px;
-                margin:0 auto 48px; line-height:1.7;">
+                margin:16px auto 48px; line-height:1.7;">
                 {tr('hero_desc')}
             </p>
         </div>
@@ -209,6 +223,51 @@ def landing():
             </div>
             """, unsafe_allow_html=True)
 
+    # ── FOUNDER SECTION ────────────────────────────────────────────────────
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    fc1, fc2 = st.columns([1, 1.3], gap="large")
+    with fc1:
+        yekzan_img = img_b64("assets/yekzan_visionary.png")
+        st.markdown(f"""
+        <div style="border-radius:24px; overflow:hidden; border:1px solid rgba(0,245,255,0.15);
+            box-shadow:0 0 60px rgba(0,245,255,0.07);">
+            <img src="data:image/png;base64,{yekzan_img}" alt="Yekzan KUS"
+                 style="width:100%; display:block;">
+        </div>
+        """, unsafe_allow_html=True)
+    with fc2:
+        st.markdown(f"""
+        <div class="ml-card ml-card-glow" style="height:100%;">
+            <div class="ml-badge ml-badge-violet" style="margin-bottom:20px;">FOUNDER & ARCHITECT</div>
+            <h2 style="font-family:'Space Grotesk'; font-size:36px; font-weight:700;
+                color:#FFFFFF; margin:0 0 8px;">Yekzan KUS</h2>
+            <p style="font-size:15px; color:rgba(0,245,255,0.7); margin-bottom:24px; letter-spacing:1px;">
+                Visionary · Builder · Innovator
+            </p>
+            <p style="font-size:16px; color:rgba(240,244,255,0.7); line-height:1.8; font-style:italic;">
+                &ldquo;MindLoop is not just a platform — it&rsquo;s a new intelligence layer
+                for human collaboration. Every idea you share becomes richer, smarter,
+                and more connected than before.&rdquo;
+            </p>
+            <div style="display:flex; gap:16px; margin-top:32px;">
+                <div class="ml-stat" style="flex:1;">
+                    <div class="ml-stat-value" style="font-size:28px;">100%</div>
+                    <div class="ml-stat-label">Free Forever</div>
+                </div>
+                <div class="ml-stat" style="flex:1;">
+                    <div class="ml-stat-value" style="font-size:28px;">AI</div>
+                    <div class="ml-stat-label">First Platform</div>
+                </div>
+                <div class="ml-stat" style="flex:1;">
+                    <div class="ml-stat-value" style="font-size:28px;">∞</div>
+                    <div class="ml-stat-label">Knowledge</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown("<br><br>", unsafe_allow_html=True)
+
+    # ── AI DEMO SECTION ──────────────────────────────────────────────────────
     # AI demo section
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown(f"""
@@ -319,19 +378,24 @@ def auth():
                 else:
                     sb = get_supabase()
                     if sb:
+                        # Check duplicate
                         try:
-                            sb.table("users").insert({
-                                "full_name": name,
-                                "email": email,
-                                "password_hash": hash_password(pwd)
-                            }).execute()
-                            st.success("Account created! Sign in now.")
-                            st.session_state.auth_mode = "login"
-                            st.rerun()
-                        except Exception:
-                            st.error("An account with this email already exists.")
+                            existing = sb.table("users").select("id").eq("email", email).execute()
+                            if existing.data:
+                                st.error("An account with this email already exists. Sign in instead.")
+                            else:
+                                sb.table("users").insert({
+                                    "full_name": name,
+                                    "email": email,
+                                    "password_hash": hash_password(pwd)
+                                }).execute()
+                                st.success("✅ Account created! You can now sign in.")
+                                st.session_state.auth_mode = "login"
+                                st.rerun()
+                        except Exception as e:
+                            st.error(f"Error: {e}")
                     else:
-                        st.error("Database unavailable. Try again later.")
+                        st.error("Database unavailable. Check your .env file.")
 
             st.markdown(f"""<p style="text-align:center; margin-top:20px; font-size:14px;
                 color:rgba(240,244,255,0.4); cursor:pointer;" onclick="">{tr("to_login")}</p>""",
@@ -378,10 +442,17 @@ def dashboard():
 
     # Sidebar nav
     with st.sidebar:
+        logo_y_b64 = img_b64("assets/logo_y.png")
         st.markdown(f"""
-        <div style="padding:24px 16px; border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:16px;">
-            <div style="font-family:'Space Grotesk'; font-size:18px; font-weight:700; color:#F0F4FF;">⚡ MindLoop</div>
-            <div style="font-size:13px; color:rgba(240,244,255,0.4); margin-top:4px;">Intelligence Loop</div>
+        <div style="padding:24px 16px; border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:16px;
+            display:flex; align-items:center; gap:12px;">
+            <img src="data:image/png;base64,{logo_y_b64}" alt="Y"
+                 style="width:36px; height:36px; object-fit:contain;
+                        filter:drop-shadow(0 0 8px rgba(0,245,255,0.5));">
+            <div>
+                <div style="font-family:'Space Grotesk'; font-size:16px; font-weight:700; color:#F0F4FF;">MindLoop</div>
+                <div style="font-size:11px; color:rgba(0,245,255,0.6);">by Yekzan KUS</div>
+            </div>
         </div>
         <div style="padding:0 8px;">
             <div class="ml-nav-item active">🏠 Feed</div>

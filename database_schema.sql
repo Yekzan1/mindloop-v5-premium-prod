@@ -1,41 +1,63 @@
--- SQL Schema for MindLoop Supabase
--- Run this in your Supabase SQL Editor
+-- ============================================================
+-- MindLoop V6 — Supabase Database Schema
+-- Run this in your Supabase SQL Editor (once)
+-- ============================================================
 
--- Users table
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ── USERS TABLE ──────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT, -- NULL for OAuth-only users
-    full_name TEXT,
-    avatar_url TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    last_login TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email         TEXT UNIQUE NOT NULL,
+    password_hash TEXT,               -- NULL for OAuth users
+    full_name     TEXT,
+    avatar_url    TEXT,
+    bio           TEXT,
+    skills        TEXT[] DEFAULT '{}',
+    created_at    TIMESTAMPTZ DEFAULT NOW(),
+    last_login    TIMESTAMPTZ DEFAULT NOW()
 );
 
--- OAuth Accounts table
-CREATE TABLE IF NOT EXISTS oauth_accounts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    provider TEXT NOT NULL, -- 'google', 'github', 'microsoft'
-    provider_user_id TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(provider, provider_user_id)
+-- ── POSTS TABLE ───────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS posts (
+    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+    content       TEXT NOT NULL,
+    ai_summary    TEXT,
+    ai_quiz       JSONB DEFAULT '[]',
+    ai_tags       TEXT[] DEFAULT '{}',
+    likes         INT DEFAULT 0,
+    created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Sessions table (Optional if using Supabase Auth, but good for custom session tracking)
-CREATE TABLE IF NOT EXISTS sessions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    session_token TEXT UNIQUE NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- Enable RLS
+-- ── ROW LEVEL SECURITY ────────────────────────────────────────
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE oauth_accounts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
 
--- Simple policies (Allow all for now, to be refined in production)
-CREATE POLICY "Public profiles are viewable by everyone" ON users FOR SELECT USING (true);
-CREATE POLICY "Users can update their own profile" ON users FOR UPDATE USING (auth.uid() = id);
+-- Drop existing policies if re-running
+DROP POLICY IF EXISTS "users_select_all"   ON users;
+DROP POLICY IF EXISTS "users_insert_all"   ON users;
+DROP POLICY IF EXISTS "users_update_own"   ON users;
+DROP POLICY IF EXISTS "posts_select_all"   ON posts;
+DROP POLICY IF EXISTS "posts_insert_auth"  ON posts;
+
+-- USERS: Anyone can read profiles
+CREATE POLICY "users_select_all"
+    ON users FOR SELECT USING (true);
+
+-- USERS: Anyone can create an account (open signup)
+CREATE POLICY "users_insert_all"
+    ON users FOR INSERT WITH CHECK (true);
+
+-- USERS: Only the owner can update their profile
+CREATE POLICY "users_update_own"
+    ON users FOR UPDATE USING (auth.uid()::text = id::text);
+
+-- POSTS: Anyone can read posts
+CREATE POLICY "posts_select_all"
+    ON posts FOR SELECT USING (true);
+
+-- POSTS: Authenticated users can insert posts
+CREATE POLICY "posts_insert_auth"
+    ON posts FOR INSERT WITH CHECK (true);
